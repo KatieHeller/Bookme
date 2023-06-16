@@ -3,7 +3,7 @@ package com.onelity.bookme.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
-import java.util.List;
+import java.util.Set;
 
 @Entity(name = "rooms")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -11,16 +11,16 @@ public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long room_id;
+    @Column(unique = true)
     private String name;
     private String location;
     private Integer capacity;
 
-    @ManyToMany
-    @JoinTable(
-            name = "room_bookings",
-            joinColumns = @JoinColumn(name = "room_id"),
-            inverseJoinColumns = @JoinColumn(name = "booking_id"))
-    private List<Booking> bookings;
+    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Booking> bookings;
+
+    public Room() {
+    }
 
     public Long getRoom_Id() {
         return room_id;
@@ -54,11 +54,11 @@ public class Room {
         this.capacity = capacity;
     }
 
-    public List<Booking> getBookings() {
+    public Set<Booking> getBookings() {
         return bookings;
     }
 
-    public void setBookings(List<Booking> bookings) {
+    public void setBookings(Set<Booking> bookings) {
         this.bookings = bookings;
     }
 }
