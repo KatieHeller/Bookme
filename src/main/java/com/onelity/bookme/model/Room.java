@@ -1,11 +1,14 @@
 package com.onelity.bookme.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.onelity.bookme.dto.RoomDTO;
 import jakarta.persistence.*;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Set;
 
-@Entity(name = "rooms")
+@Entity(name = "meeting_room")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Room {
     @Id
@@ -16,11 +19,20 @@ public class Room {
     private String location;
     private Integer capacity;
 
-    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+//    @Autowired
+//    private ModelMapper modelMapper;
+
+//    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "room", fetch = FetchType.LAZY)
     private Set<Booking> bookings;
 
     public Room() {
     }
+
+//    public RoomDTO convertToDTO() {
+//        RoomDTO roomDTO = modelMapper.map(this, RoomDTO.class);
+//        return roomDTO;
+//    }
 
     public Long getRoom_Id() {
         return room_id;

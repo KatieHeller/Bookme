@@ -1,4 +1,7 @@
 package com.onelity.bookme.repository;
 
-public class BookingRepository {
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface BookingRepository {
 }

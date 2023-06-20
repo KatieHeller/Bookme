@@ -1,11 +1,9 @@
 package com.onelity.bookme.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
 @Entity(name = "bookings")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -13,7 +11,11 @@ public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long booking_id;
-    private Integer room_number;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "room_id", nullable = false)
+    private Room room;
+
     private String title;
     private String description;
     private OffsetDateTime start_timestamp;
@@ -21,9 +23,8 @@ public class Booking {
     private Integer participants;
     private String repeat_pattern;
 
-    @ManyToMany(mappedBy = "bookings")
-    @JsonIgnore
-    private List<Room> rooms;
+    public Booking() {
+    }
 
     public Long getBooking_id() {
         return booking_id;
@@ -33,12 +34,12 @@ public class Booking {
         this.booking_id = booking_id;
     }
 
-    public Integer getRoom_number() {
-        return room_number;
+    public Room getRoom() {
+        return room;
     }
 
-    public void setRoom_number(Integer room_number) {
-        this.room_number = room_number;
+    public void setRoom(Room room) {
+        this.room = room;
     }
 
     public String getTitle() {
@@ -87,13 +88,5 @@ public class Booking {
 
     public void setRepeat_pattern(String repeat_pattern) {
         this.repeat_pattern = repeat_pattern;
-    }
-
-    public List<Room> getRooms() {
-        return rooms;
-    }
-
-    public void setRooms(List<Room> rooms) {
-        this.rooms = rooms;
     }
 }
