@@ -1,22 +1,48 @@
 package com.onelity.bookme.dto;
 
-import java.time.OffsetDateTime;
+import java.sql.Time;
+import java.sql.Date;
 
 public class BookingDTO {
 
     private Long id;
+    private String room;
     private String title;
-    private OffsetDateTime start_timestamp;
-    private OffsetDateTime end_timestamp;
+    private String description;
+    private Date startDate;
+    private Date endDate;
+    private Time startTime;
+    private Time endTime;
     private Integer participants;
     private String repeat_pattern;
+
+    public BookingDTO(Long id, String room, String title, String description, Date startDate,
+                      Date endDate, Time startTime, Time endTime, Integer participants,
+                      String repeat_pattern) {
+        this.id = id;
+        this.room = room;
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.participants = participants;
+        this.repeat_pattern = repeat_pattern;
+    }
 
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setId(Long id) { this.id = id; }
+
+    public String getRoom() {
+        return room;
+    }
+
+    public void setRoom(String room) {
+        this.room = room;
     }
 
     public String getTitle() {
@@ -27,20 +53,44 @@ public class BookingDTO {
         this.title = title;
     }
 
-    public OffsetDateTime getStart_timestamp() {
-        return start_timestamp;
+    public String getDescription() {
+        return description;
     }
 
-    public void setStart_timestamp(OffsetDateTime start_timestamp) {
-        this.start_timestamp = start_timestamp;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public OffsetDateTime getEnd_timestamp() {
-        return end_timestamp;
+    public Date getStartDate() {
+        return startDate;
     }
 
-    public void setEnd_timestamp(OffsetDateTime end_timestamp) {
-        this.end_timestamp = end_timestamp;
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public Time getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Time startTime) {
+        this.startTime = startTime;
+    }
+
+    public Time getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Time endTime) {
+        this.endTime = endTime;
     }
 
     public Integer getParticipants() {

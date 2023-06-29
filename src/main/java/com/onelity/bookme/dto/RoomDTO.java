@@ -1,13 +1,7 @@
 package com.onelity.bookme.dto;
 
-
-import com.onelity.bookme.model.Room;
 import com.onelity.bookme.service.RoomService;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class RoomDTO {
 
@@ -19,19 +13,13 @@ public class RoomDTO {
     @Autowired
     private RoomService roomService;
 
-//    @Autowired
-//    private ModelMapper modelMapper;
-
-
-//    public Room convertToEntity() {
-//        return modelMapper.map(this, Room.class);
-//    }
-
     public Long getId() {
         return id;
     }
 
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getName() {
         return name;

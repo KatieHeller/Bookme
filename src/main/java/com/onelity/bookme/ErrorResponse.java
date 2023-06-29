@@ -1,11 +1,8 @@
-package com.onelity.bookme.model;
+package com.onelity.bookme;
 
 public class ErrorResponse {
-
     private String message;
 
-    public ErrorResponse() {
-    }
     public String getMessage() {
         return message;
     }

@@ -2,36 +2,58 @@ package com.onelity.bookme.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.OffsetDateTime;
+import java.sql.Date;
+import java.sql.Time;
 
 @Entity(name = "bookings")
+@Table(name="bookings", schema="public")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long booking_id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "room_id", nullable = false)
+    @JoinColumn(name = "room", nullable = false, unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Room room;
 
     private String title;
     private String description;
-    private OffsetDateTime start_timestamp;
-    private OffsetDateTime end_timestamp;
+    private Date startDate;
+    private Date endDate;
+    private Time startTime;
+    private Time endTime;
     private Integer participants;
     private String repeat_pattern;
 
     public Booking() {
     }
 
-    public Long getBooking_id() {
-        return booking_id;
+    public Booking(Long id, Room room, String title, String description, Date startDate,
+                   Date endDate, Time startTime, Time endTime, Integer participants,
+                   String repeat_pattern) {
+        this.id = id;
+        this.room = room;
+        this.title = title;
+        this.description = description;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.participants = participants;
+        this.repeat_pattern = repeat_pattern;
     }
 
-    public void setBooking_id(Long booking_id) {
-        this.booking_id = booking_id;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Room getRoom() {
@@ -39,7 +61,7 @@ public class Booking {
     }
 
     public void setRoom(Room room) {
-        this.room = room;
+            this.room = room;
     }
 
     public String getTitle() {
@@ -58,20 +80,36 @@ public class Booking {
         this.description = description;
     }
 
-    public OffsetDateTime getStart_timestamp() {
-        return start_timestamp;
+    public Date getStartDate() {
+        return startDate;
     }
 
-    public void setStart_timestamp(OffsetDateTime start_timestamp) {
-        this.start_timestamp = start_timestamp;
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
     }
 
-    public OffsetDateTime getEnd_timestamp() {
-        return end_timestamp;
+    public Date getEndDate() {
+        return endDate;
     }
 
-    public void setEnd_timestamp(OffsetDateTime end_timestamp) {
-        this.end_timestamp = end_timestamp;
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
+    public Time getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Time startTime) {
+        this.startTime = startTime;
+    }
+
+    public Time getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Time endTime) {
+        this.endTime = endTime;
     }
 
     public Integer getParticipants() {
