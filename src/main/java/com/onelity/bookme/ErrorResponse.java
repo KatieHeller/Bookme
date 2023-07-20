@@ -1,5 +1,8 @@
 package com.onelity.bookme;
 
+/**
+ * Simple error class to allow custom error messages
+ */
 public class ErrorResponse {
     private String message;
 

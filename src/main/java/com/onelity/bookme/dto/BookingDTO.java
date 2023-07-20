@@ -3,6 +3,9 @@ package com.onelity.bookme.dto;
 import java.sql.Time;
 import java.sql.Date;
 
+/**
+ * DTO class for Booking entities
+ */
 public class BookingDTO {
 
     private Long id;
@@ -15,6 +18,9 @@ public class BookingDTO {
     private Time endTime;
     private Integer participants;
     private String repeat_pattern;
+
+    public BookingDTO() {
+    }
 
     public BookingDTO(Long id, String room, String title, String description, Date startDate,
                       Date endDate, Time startTime, Time endTime, Integer participants,

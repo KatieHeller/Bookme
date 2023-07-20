@@ -8,6 +8,9 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.sql.Date;
 import java.sql.Time;
 
+/**
+ * Model class for booking entities, which corresponds with 'bookings' table in database
+ */
 @Entity(name = "bookings")
 @Table(name="bookings", schema="public")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -16,6 +19,10 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Links a booking to its meeting room through a foreign key from this room column to the id column of the
+     * 'meeting_rooms' table
+     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room", nullable = false, unique = true)
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -29,13 +36,14 @@ public class Booking {
     private Time endTime;
     private Integer participants;
     private String repeat_pattern;
+    private String creator_username;
 
     public Booking() {
     }
 
     public Booking(Long id, Room room, String title, String description, Date startDate,
                    Date endDate, Time startTime, Time endTime, Integer participants,
-                   String repeat_pattern) {
+                   String repeat_pattern, String creator_username) {
         this.id = id;
         this.room = room;
         this.title = title;
@@ -46,6 +54,7 @@ public class Booking {
         this.endTime = endTime;
         this.participants = participants;
         this.repeat_pattern = repeat_pattern;
+        this.creator_username = creator_username;
     }
 
     public Long getId() {
@@ -126,5 +135,13 @@ public class Booking {
 
     public void setRepeat_pattern(String repeat_pattern) {
         this.repeat_pattern = repeat_pattern;
+    }
+
+    public String getCreator_username() {
+        return creator_username;
+    }
+
+    public void setCreator_username(String creator_username) {
+        this.creator_username = creator_username;
     }
 }

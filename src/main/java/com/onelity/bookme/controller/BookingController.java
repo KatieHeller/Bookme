@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller for /bookings endpoint which directs all requests to methods implemented in bookingService module
+ */
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
@@ -16,7 +19,10 @@ public class BookingController {
 
     @GetMapping
     @RequestMapping("{id}")
-    public ResponseEntity<?> getBooking(@PathVariable Long id) { return bookingService.getBookingFromDatabase(id); }
+    public ResponseEntity<?> getBooking(@PathVariable Long id)
+    {
+        return bookingService.getBookingFromDatabase(id);
+    }
 
     @GetMapping
     public ResponseEntity<?> getAllBookings() { return bookingService.getAllBookingsFromDatabase(); }
@@ -35,6 +41,11 @@ public class BookingController {
         return bookingService.updateBookingInDatabase(id, bookingDTO);
     }
 
+    /**
+     * Handles EntityNotFound exceptions when bookings with nonexistent ids are searched for
+     * @param exception the exception thrown when the repository attempts to get a nonpresent booking entity
+     * @return response entity with NotFound status and exception message
+     */
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<String> handleNoSuchElementFoundException(

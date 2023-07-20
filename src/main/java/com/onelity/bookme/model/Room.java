@@ -23,6 +23,12 @@ public class Room {
     public Room() {
     }
 
+    public Room(String name, String location, Integer capacity) {
+        this.name = name;
+        this.location = location;
+        this.capacity = capacity;
+    }
+
     public Long getId() {
         return id;
     }
