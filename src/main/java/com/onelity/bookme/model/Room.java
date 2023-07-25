@@ -1,13 +1,14 @@
 package com.onelity.bookme.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.*;
+
 @Entity(name = "meeting_rooms")
-@Table(name="meeting_rooms", schema="public")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "meeting_rooms", schema = "public")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

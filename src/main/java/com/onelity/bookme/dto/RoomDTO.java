@@ -1,7 +1,8 @@
 package com.onelity.bookme.dto;
 
-import com.onelity.bookme.service.RoomService;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.onelity.bookme.service.RoomService;
 
 /**
  * DTO class for room entities

@@ -1,10 +1,11 @@
 package com.onelity.bookme.service;
 
-import com.onelity.bookme.model.User;
-import com.onelity.bookme.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+
+import com.onelity.bookme.model.User;
+import com.onelity.bookme.repository.UserRepository;
 
 /**
  * Implementation of UserDetailsService which contains custom loadUserByUsername method
@@ -17,9 +18,14 @@ public class UserDetailsService implements org.springframework.security.core.use
 
     /**
      * Obtains User object from "users" database table based on their username
-     * @param username username of user desired
+     *
+     * @param username
+     *            username of user desired
+     *
      * @return returns User object if user is present
-     * @throws UsernameNotFoundException exception if no user with given username exists
+     *
+     * @throws UsernameNotFoundException
+     *             exception if no user with given username exists
      */
     @Override
     public User loadUserByUsername(String username) throws UsernameNotFoundException {

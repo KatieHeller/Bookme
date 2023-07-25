@@ -1,11 +1,10 @@
 package com.onelity.bookme.service;
 
-import com.onelity.bookme.ErrorResponse;
-import com.onelity.bookme.dto.BookingDTO;
-import com.onelity.bookme.model.Booking;
-import com.onelity.bookme.model.Room;
-import com.onelity.bookme.repository.BookingRepository;
-import com.onelity.bookme.repository.RoomRepository;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,10 +13,12 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Optional;
+import com.onelity.bookme.ErrorResponse;
+import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.model.Booking;
+import com.onelity.bookme.model.Room;
+import com.onelity.bookme.repository.BookingRepository;
+import com.onelity.bookme.repository.RoomRepository;
 
 /**
  * BookingService handles all business logic required for interacting with bookings
@@ -27,28 +28,32 @@ public class BookingService {
     @Autowired
     private BookingRepository repo;
 
-    @Autowired RoomRepository roomRepo;
+    @Autowired
+    RoomRepository roomRepo;
 
-    public BookingService() {}
+    public BookingService() {
+    }
 
     /**
      * Gets booking from database with a specific id
-     * @param id id of requested booking
+     *
+     * @param id
+     *            id of requested booking
+     *
      * @return returns BookingDTO with OK status if booking is present, or Error message with Not Found status if
-     * booking is not present
+     *         booking is not present
      */
     public ResponseEntity<?> getBookingFromDatabase(Long id) {
         Optional<Booking> booking = repo.findById(id);
         if (booking.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("Booking with id " + id + " not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking with id " + id + " not found");
         }
         return new ResponseEntity<>(convertBookingToBookingDTO(booking.get()), HttpStatus.OK);
     }
 
     /**
      * Gets all bookings existing in database
+     *
      * @return returns list of booking DTOs with OK status
      */
     public ResponseEntity<?> getAllBookingsFromDatabase() {
@@ -62,9 +67,12 @@ public class BookingService {
 
     /**
      * Performs necessary validation of inputted booking object and creates booking in database
-     * @param bookingDTO bookingDTO object that user would like to add to database
-     * @return returns same bookingDTO object with its new id and Created status, or Conflict or Bad Request if
-     * booking is not valid
+     *
+     * @param bookingDTO
+     *            bookingDTO object that user would like to add to database
+     *
+     * @return returns same bookingDTO object with its new id and Created status, or Conflict or Bad Request if booking
+     *         is not valid
      */
     public ResponseEntity<?> createBookingInDatabase(BookingDTO bookingDTO) {
         ResponseEntity<?> isValidBooking = checkForValidBooking(bookingDTO);
@@ -83,9 +91,12 @@ public class BookingService {
     /**
      * Deletes a booking in database, checking that the booking actually exists and the current user is authorized to
      * delete it
-     * @param id id of booking that user wants to delete
+     *
+     * @param id
+     *            id of booking that user wants to delete
+     *
      * @return returns No content if successful deletion or if booking was already not present, or returns Unauthorized
-     * if user was not authorized to delete this
+     *         if user was not authorized to delete this
      */
     public ResponseEntity<?> deleteBookingInDatabase(Long id) {
         Optional<Booking> optionalBooking = repo.findById(id);
@@ -103,10 +114,14 @@ public class BookingService {
     /**
      * Updates a booking in database, checking that booking actually exists, user is authorized to update this, and the
      * new booking information is all valid
-     * @param id id of booking user wants to update
-     * @param bookingDTO information that user wants to update the booking with
+     *
+     * @param id
+     *            id of booking user wants to update
+     * @param bookingDTO
+     *            information that user wants to update the booking with
+     *
      * @return Returns new bookingDTO object and Ok status if successful update, Unauthorized if user not authorized,
-     * Bad Request if booking is invalid, or Conflict if booking times overlap with another booking in same room
+     *         Bad Request if booking is invalid, or Conflict if booking times overlap with another booking in same room
      */
     public ResponseEntity<?> updateBookingInDatabase(Long id, BookingDTO bookingDTO) {
         Optional<Booking> optionalBooking = repo.findById(id);
@@ -124,10 +139,10 @@ public class BookingService {
             return isValidBooking;
         }
         // If any dates or times of booking have been changed, do check for conflicting bookings
-        if (!existingBooking.getStartDate().toLocalDate().equals(bookingDTO.getStartDate().toLocalDate()) ||
-        !existingBooking.getEndDate().toLocalDate().equals(bookingDTO.getEndDate().toLocalDate()) ||
-        !existingBooking.getStartTime().equals(bookingDTO.getStartTime()) ||
-        !existingBooking.getEndTime().equals(bookingDTO.getEndTime())) {
+        if (!existingBooking.getStartDate().toLocalDate().equals(bookingDTO.getStartDate().toLocalDate())
+                || !existingBooking.getEndDate().toLocalDate().equals(bookingDTO.getEndDate().toLocalDate())
+                || !existingBooking.getStartTime().equals(bookingDTO.getStartTime())
+                || !existingBooking.getEndTime().equals(bookingDTO.getEndTime())) {
             ResponseEntity<?> hasConflictingBooking = checkForConflictingBookings(id, bookingDTO, true);
             if (hasConflictingBooking != null) {
                 return hasConflictingBooking;
@@ -139,37 +154,46 @@ public class BookingService {
 
     /**
      * Creates ResponseEntity for case when bookings conflict
-     * @param bookingDTO booking which is already booked at time
+     *
+     * @param bookingDTO
+     *            booking which is already booked at time
+     *
      * @return returns ResponseEntity object with Conflict status and error message containing booked room name
      */
     private ResponseEntity<?> meetingRoomBooked(BookingDTO bookingDTO) {
-        ErrorResponse errorResponse= new ErrorResponse();
-        errorResponse.setMessage("Meeting room with name " + bookingDTO.getRoom() + " is already booked " +
-                "for the same time");
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage(
+                "Meeting room with name " + bookingDTO.getRoom() + " is already booked " + "for the same time");
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
     /**
      * Creates ResponseEntity for any case where user input is invalid
-     * @param message message that should be displayed to user
+     *
+     * @param message
+     *            message that should be displayed to user
+     *
      * @return returns ResponseEntity object with Bad Request status and error message
      */
     private ResponseEntity<?> badRequest(String message) {
-        ErrorResponse errorResponse= new ErrorResponse();
+        ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setMessage(message);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     private BookingDTO convertBookingToBookingDTO(Booking booking) {
-        return new BookingDTO(booking.getId(), booking.getRoom().getName(),
-                booking.getTitle(), booking.getDescription(), booking.getStartDate(), booking.getEndDate(),
-                booking.getStartTime(), booking.getEndTime(), booking.getParticipants(), booking.getRepeat_pattern());
+        return new BookingDTO(booking.getId(), booking.getRoom().getName(), booking.getTitle(),
+                booking.getDescription(), booking.getStartDate(), booking.getEndDate(), booking.getStartTime(),
+                booking.getEndTime(), booking.getParticipants(), booking.getRepeat_pattern());
     }
 
     /**
      * Converts a BookingDTO to a Booking object, taking into account the current authenticated user so the booking
      * creator can be saved
-     * @param bookingDTO bookingDTO being converted
+     *
+     * @param bookingDTO
+     *            bookingDTO being converted
+     *
      * @return returns equivalent Booking object
      */
     private Booking convertBookingDTOToBooking(BookingDTO bookingDTO) {
@@ -183,24 +207,31 @@ public class BookingService {
 
     /**
      * Checks if current autheticated user either has Admin role or is the creator of a booking
-     * @param booking Booking a user is trying to update or delete
+     *
+     * @param booking
+     *            Booking a user is trying to update or delete
+     *
      * @return returns null if user is authorized or a Response Entity with Unauthorized status otherwise
      */
     private ResponseEntity<?> checkIfAuthenticatedUser(Booking booking) {
         UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) || user.getUsername().equals(booking.getCreator_username())) {
+        if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                || user.getUsername().equals(booking.getCreator_username())) {
             return null;
         }
-        ErrorResponse errorResponse= new ErrorResponse();
+        ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setMessage("Access denied");
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
     /**
      * Performs all validity checks on fields of a bookingDTO
-     * @param bookingDTO bookingDTO object that needs to be verified
+     *
+     * @param bookingDTO
+     *            bookingDTO object that needs to be verified
+     *
      * @return returns null if booking is valid or ResponseEntity with Bad Request status and custom error message
-     * informing user which field is invalid
+     *         informing user which field is invalid
      */
     private ResponseEntity<?> checkForValidBooking(BookingDTO bookingDTO) {
         if (bookingDTO == null) {
@@ -214,9 +245,9 @@ public class BookingService {
         if (room == null) {
             return badRequest("Meeting room with name '" + bookingDTO.getRoom() + "' does not exist");
         }
-        if (bookingDTO.getTitle() == null || bookingDTO.getStartDate() == null ||
-                bookingDTO.getEndDate() == null || bookingDTO.getStartTime() == null ||
-                bookingDTO.getEndTime() == null || bookingDTO.getParticipants() == null) {
+        if (bookingDTO.getTitle() == null || bookingDTO.getStartDate() == null || bookingDTO.getEndDate() == null
+                || bookingDTO.getStartTime() == null || bookingDTO.getEndTime() == null
+                || bookingDTO.getParticipants() == null) {
             return badRequest("Fields of booking cannot be null (except description or repeat option)");
         }
         // Checks that booking title is no more than 100 characters
@@ -240,13 +271,13 @@ public class BookingService {
         }
         // Checks that repeat option is either null, 'every day', or 'every same day of the week'
         String repeatPattern = bookingDTO.getRepeat_pattern();
-        if (repeatPattern != null && !repeatPattern.equals("every day") &&
-                !repeatPattern.equals("every same day of the week")) {
+        if (repeatPattern != null && !repeatPattern.equals("every day")
+                && !repeatPattern.equals("every same day of the week")) {
             return badRequest("Repeat option must either be null, 'every day', or 'every same day of the week'");
         }
         // Checks that if repeat option is null, start date is same as end date
-        if (repeatPattern == null &&
-                !bookingDTO.getStartDate().toLocalDate().isEqual(bookingDTO.getEndDate().toLocalDate())) {
+        if (repeatPattern == null
+                && !bookingDTO.getStartDate().toLocalDate().isEqual(bookingDTO.getEndDate().toLocalDate())) {
             return badRequest("If booking does not repeat, start date should be same as end date");
         }
         // Returns null only if this booking is valid
@@ -257,10 +288,15 @@ public class BookingService {
 
     /**
      * Verifies if a given booking will overlap times and room with any existing bookings in database
-     * @param id used in case of PUT method for bookings, the id of booking being updated
-     * @param bookingDTO bookingDTO that is being checked for conflicts
-     * @param isUpdate when true, the id will be used so that if a booking's new times overlap with its previous times,
-     *                 this conflict will be ignored
+     *
+     * @param id
+     *            used in case of PUT method for bookings, the id of booking being updated
+     * @param bookingDTO
+     *            bookingDTO that is being checked for conflicts
+     * @param isUpdate
+     *            when true, the id will be used so that if a booking's new times overlap with its previous times, this
+     *            conflict will be ignored
+     *
      * @return returns null if there are no conflicts or a ResponseEntity with Conflict status and error message
      */
     private ResponseEntity<?> checkForConflictingBookings(Long id, BookingDTO bookingDTO, boolean isUpdate) {
@@ -270,12 +306,11 @@ public class BookingService {
         // These are potential conflicts, depending on their repeat patterns
         List<Booking> overlappingBookings;
         if (isUpdate) {
-            overlappingBookings = repo.findOverlappingBookingsUpdate(bookingDTO.getStartDate(),
-                    bookingDTO.getEndDate(), bookingDTO.getStartTime(), bookingDTO.getEndTime(), room, id);
-        }
-        else {
-            overlappingBookings = repo.findOverlappingBookingsCreate(bookingDTO.getStartDate(),
-                    bookingDTO.getEndDate(), bookingDTO.getStartTime(), bookingDTO.getEndTime(), room);
+            overlappingBookings = repo.findOverlappingBookingsUpdate(bookingDTO.getStartDate(), bookingDTO.getEndDate(),
+                    bookingDTO.getStartTime(), bookingDTO.getEndTime(), room, id);
+        } else {
+            overlappingBookings = repo.findOverlappingBookingsCreate(bookingDTO.getStartDate(), bookingDTO.getEndDate(),
+                    bookingDTO.getStartTime(), bookingDTO.getEndTime(), room);
         }
         Calendar c = Calendar.getInstance();
         c.setTime(bookingDTO.getStartDate());

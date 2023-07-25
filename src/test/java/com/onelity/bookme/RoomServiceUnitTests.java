@@ -1,11 +1,8 @@
 package com.onelity.bookme;
 
-import com.onelity.bookme.dto.BookingDTO;
-import com.onelity.bookme.dto.RoomDTO;
-import com.onelity.bookme.repository.BookingRepository;
-import com.onelity.bookme.repository.RoomRepository;
-import com.onelity.bookme.service.BookingService;
-import com.onelity.bookme.service.RoomService;
+import java.sql.Date;
+import java.sql.Time;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.internal.util.Assert;
@@ -16,8 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.event.annotation.BeforeTestClass;
 
-import java.sql.Date;
-import java.sql.Time;
+import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.dto.RoomDTO;
+import com.onelity.bookme.repository.BookingRepository;
+import com.onelity.bookme.repository.RoomRepository;
+import com.onelity.bookme.service.BookingService;
+import com.onelity.bookme.service.RoomService;
 
 @SpringBootTest
 public class RoomServiceUnitTests {
@@ -49,8 +50,8 @@ public class RoomServiceUnitTests {
     @Test
     public void givenLongName_whenCreateRoom_thenReturnBadRequest() {
         RoomDTO roomDTO = createExampleRoomDTO();
-        roomDTO.setName("Room 1 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
-                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        roomDTO.setName("Room 1 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         ResponseEntity<?> response = roomService.createRoomInDatabase(roomDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
@@ -116,7 +117,7 @@ public class RoomServiceUnitTests {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenNewRoomCapacityBelowBookingParticipants_whenUpdateRoom_thenReturnBadRequest() {
         RoomDTO roomDTO = createExampleRoomDTO();
         BookingDTO bookingDTO = new BookingDTO();
@@ -136,10 +137,10 @@ public class RoomServiceUnitTests {
         response = roomService.updateRoomInDatabase(id, roomDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Room could not be updated because booking with " +
-                "title '" + bookingDTO.getTitle() + "' has more participants (" +
-                bookingDTO.getParticipants().toString() + ") than new capacity (" +
-                roomDTO.getCapacity().toString() + ")"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Room could not be updated because booking with " + "title '" + bookingDTO.getTitle()
+                        + "' has more participants (" + bookingDTO.getParticipants().toString()
+                        + ") than new capacity (" + roomDTO.getCapacity().toString() + ")"));
     }
 
     private RoomDTO createExampleRoomDTO() {

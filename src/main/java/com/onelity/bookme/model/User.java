@@ -1,20 +1,22 @@
 package com.onelity.bookme.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.*;
 
 /**
  * Model class corresponding to 'users' entity, which stores all info of authenticated app users
  */
 @Entity(name = "users")
-@Table(name="users", schema="public")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "users", schema = "public")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class User implements UserDetails {
 
     @Id
@@ -72,6 +74,7 @@ public class User implements UserDetails {
 
     /**
      * Returns proper authorities of a user based on their role in database
+     *
      * @return returns set of granted authorities
      */
     @Override

@@ -1,7 +1,8 @@
 package com.onelity.bookme.repository;
 
-import com.onelity.bookme.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.onelity.bookme.model.User;
 
 /**
  * Repository which handles accessing users through the database, so they can be authenticated

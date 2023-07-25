@@ -1,12 +1,15 @@
 package com.onelity.bookme.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.onelity.bookme.dto.BookingDTO;
-import com.onelity.bookme.model.Booking;
-import com.onelity.bookme.model.Room;
-import com.onelity.bookme.model.User;
-import com.onelity.bookme.repository.BookingRepository;
-import com.onelity.bookme.repository.RoomRepository;
+import static org.hamcrest.CoreMatchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.util.List;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,15 +26,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.sql.Date;
-import java.sql.Time;
-import java.util.List;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.model.Booking;
+import com.onelity.bookme.model.Room;
+import com.onelity.bookme.model.User;
+import com.onelity.bookme.repository.BookingRepository;
+import com.onelity.bookme.repository.RoomRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -63,18 +64,15 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenValidBookingObject_whenCreateBooking_thenReturnSavedBooking() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
         // when
-        ResultActions response = mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
-        response.andDo(print()).
-                andExpect(status().isCreated())
-                .andExpect(jsonPath("$.room", is(bookingDTO.getRoom())))
+        response.andDo(print()).andExpect(status().isCreated()).andExpect(jsonPath("$.room", is(bookingDTO.getRoom())))
                 .andExpect(jsonPath("$.title", is(bookingDTO.getTitle())))
                 .andExpect(jsonPath("$.description", is(bookingDTO.getDescription())))
                 .andExpect(jsonPath("$.startDate", is(bookingDTO.getStartDate().toString())))
@@ -86,14 +84,13 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenValidBookingObject_whenCreateBooking_thenDatabaseContainsBooking() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
         // when
-        ResultActions response = mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         List<Booking> bookings = bookingRepository.findAll();
         // then
         Assert.isTrue(bookings.size() == 1);
@@ -110,39 +107,35 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenInvalidBookingObject_whenCreateBooking_thenReturnBadRequest() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
         bookingDTO.setParticipants(-100);
         // when
-        ResultActions response = mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
-        response.andDo(print()).
-                andExpect(status().isBadRequest()).
-                andExpect(MockMvcResultMatchers.jsonPath("$.message",
-                        is("Participants cannot be less than 0")));
+        response.andDo(print()).andExpect(status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message", is("Participants cannot be less than 0")));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenInvalidBookingObject_whenCreateBooking_thenDatabaseDoesNotContainRoom() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
         bookingDTO.setParticipants(-100);
         // when
-        ResultActions response = mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
         List<Booking> bookings = bookingRepository.findAll();
         Assert.isTrue(bookings.size() == 0);
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingWithConflict_whenCreateBooking_thenReturnConflict() throws Exception {
         // given
         BookingDTO bookingDTO1 = createValidBookingDTO();
@@ -151,22 +144,17 @@ public class BookingControllerTest {
         bookingDTO2.setStartTime(new Time(07, 30, 00));
         bookingDTO2.setEndTime(new Time(12, 00, 00));
         // when
-        mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO1)));
-        ResultActions response = mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO2)));
+        mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO1)));
+        ResultActions response = mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO2)));
         // then
-        response.andDo(print()).
-                andExpect(status().isConflict()).
-                andExpect(MockMvcResultMatchers.jsonPath("$.message",
-                        is("Meeting room with name " + bookingDTO1.getRoom() + " is already booked " +
-                                "for the same time")));
+        response.andDo(print()).andExpect(status().isConflict()).andExpect(MockMvcResultMatchers.jsonPath("$.message",
+                is("Meeting room with name " + bookingDTO1.getRoom() + " is already booked " + "for the same time")));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingWithConflict_whenCreateBooking_thenDatabaseDoesNotContainNewBooking() throws Exception {
         // given
         BookingDTO bookingDTO1 = createValidBookingDTO();
@@ -175,12 +163,10 @@ public class BookingControllerTest {
         bookingDTO2.setStartTime(new Time(07, 30, 00));
         bookingDTO2.setEndTime(new Time(12, 00, 00));
         // when
-        mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO1)));
-        ResultActions response = mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO2)));
+        mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO1)));
+        ResultActions response = mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO2)));
         // then
         List<Booking> bookings = bookingRepository.findAll();
         Assert.isTrue(bookings.size() == 1);
@@ -189,7 +175,7 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenExistingId_whenGetBooking_thenReturnBooking() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -198,9 +184,7 @@ public class BookingControllerTest {
         // when
         ResultActions response = mockMvc.perform(get("/bookings/{id}", id));
         // then
-        response.andDo(print()).
-                andExpect(status().isOk())
-                .andExpect(jsonPath("$.room", is(bookingDTO.getRoom())))
+        response.andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.room", is(bookingDTO.getRoom())))
                 .andExpect(jsonPath("$.title", is(bookingDTO.getTitle())))
                 .andExpect(jsonPath("$.description", is(bookingDTO.getDescription())))
                 .andExpect(jsonPath("$.startDate", is(bookingDTO.getStartDate().toString())))
@@ -212,39 +196,34 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenNonexistentId_whenGetBooking_thenReturnNotFound() throws Exception {
         // given
         // Database is already empty so all ids will be nonexistent
         // when
         ResultActions response = mockMvc.perform(get("/bookings/{id}", 5L));
         // then
-        response.andDo(print()).
-                andExpect(status().isNotFound());
+        response.andDo(print()).andExpect(status().isNotFound());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void whenGetBookings_thenReturnBookings() throws Exception {
         // given
         BookingDTO bookingDTO1 = createValidBookingDTO();
         BookingDTO bookingDTO2 = createValidBookingDTO2();
-        mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO1)));
-        mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO2)));
+        mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO1)));
+        mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO2)));
         // when
         ResultActions response = mockMvc.perform(get("/bookings"));
         // then
-        response.andDo(print()).
-                andExpect(status().isOk()).
-                andExpect(jsonPath("$.size()", is(2)));
+        response.andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.size()", is(2)));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenExistingId_whenDeleteBooking_thenSuccessfulDeletion() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -253,12 +232,11 @@ public class BookingControllerTest {
         // when
         ResultActions response = mockMvc.perform(delete("/bookings/{id}", id));
         // then
-        response.andDo(print()).
-                andExpect(status().isNoContent());
+        response.andDo(print()).andExpect(status().isNoContent());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenExistingId_whenDeleteBooking_thenDatabaseDeletesBooking() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -272,19 +250,18 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenNonexistentId_whenDeleteBooking_thenSuccessfulDeletion() throws Exception {
         // given
         // Database is empty so any id will be nonexistent
         // when
         ResultActions response = mockMvc.perform(delete("/bookings/{id}", 5L));
         // then
-        response.andDo(print()).
-                andExpect(status().isNoContent());
+        response.andDo(print()).andExpect(status().isNoContent());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenValidBookingObject_whenUpdateBooking_thenReturnSavedBooking() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -292,17 +269,14 @@ public class BookingControllerTest {
         Long id = booking.getId();
         bookingDTO.setTitle("Updated Booking 1");
         // when
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
-        response.andDo(print()).
-                andExpect(status().isOk())
-                .andExpect(jsonPath("$.title", is(bookingDTO.getTitle())));
+        response.andDo(print()).andExpect(status().isOk()).andExpect(jsonPath("$.title", is(bookingDTO.getTitle())));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenValidBookingObject_whenUpdateBooking_thenDatabaseContainsUpdatedBooking() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -310,9 +284,8 @@ public class BookingControllerTest {
         Long id = booking.getId();
         bookingDTO.setTitle("Updated Booking 1");
         // when
-        mockMvc.perform(put("/bookings/{id}", id).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
         List<Booking> updatedBookings = bookingRepository.findAll();
         Assert.isTrue(updatedBookings.size() == 1);
@@ -321,7 +294,7 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenConflictingBookings_whenUpdateBooking_thenReturnConflict() throws Exception {
         // given
         BookingDTO bookingDTO1 = createValidBookingDTO();
@@ -332,19 +305,15 @@ public class BookingControllerTest {
         bookingDTO2.setStartTime(new Time(06, 00, 00));
         bookingDTO2.setEndTime(new Time(11, 00, 00));
         // when
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO2)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO2)));
         // then
-        response.andDo(print()).
-                andExpect(status().isConflict()).
-                andExpect(MockMvcResultMatchers.jsonPath("$.message",
-                    is("Meeting room with name " + bookingDTO1.getRoom() + " is already booked " +
-                        "for the same time")));
+        response.andDo(print()).andExpect(status().isConflict()).andExpect(MockMvcResultMatchers.jsonPath("$.message",
+                is("Meeting room with name " + bookingDTO1.getRoom() + " is already booked " + "for the same time")));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenConflictingBookingObject_whenUpdateBooking_thenDatabaseRemainsSame() throws Exception {
         // given
         BookingDTO bookingDTO1 = createValidBookingDTO();
@@ -355,9 +324,8 @@ public class BookingControllerTest {
         bookingDTO2.setStartTime(new Time(06, 00, 00));
         bookingDTO2.setEndTime(new Time(11, 00, 00));
         // when
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO2)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO2)));
         // then
         List<Booking> existingBookings = bookingRepository.findAll();
         Assert.isTrue(existingBookings.size() == 2);
@@ -367,7 +335,7 @@ public class BookingControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenInvalidBookingObject_whenUpdateBooking_thenReturnBadRequest() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -375,18 +343,15 @@ public class BookingControllerTest {
         Long id = booking.getId();
         bookingDTO.setParticipants(1000);
         // when
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
-        response.andDo(print()).
-                andExpect(status().isBadRequest()).
-                andExpect(MockMvcResultMatchers.jsonPath("$.message",
-                        is("Number of participants in booking exceeds meeting room capacity")));
+        response.andDo(print()).andExpect(status().isBadRequest()).andExpect(MockMvcResultMatchers.jsonPath("$.message",
+                is("Number of participants in booking exceeds meeting room capacity")));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenInvalidBookingObject_whenUpdateBooking_thenDatabaseRemainsSame() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -394,9 +359,8 @@ public class BookingControllerTest {
         Long id = booking.getId();
         bookingDTO.setParticipants(1000);
         // when
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
         List<Booking> existingBookings = bookingRepository.findAll();
         Assert.isTrue(existingBookings.size() == 1);
@@ -404,7 +368,7 @@ public class BookingControllerTest {
         Assert.isTrue(booking.getParticipants().equals(50));
     }
 
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     private void createRoomInDatabase() {
         Room room = new Room();
         room.setName("Room 1");

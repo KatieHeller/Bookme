@@ -1,6 +1,7 @@
 package com.onelity.bookme.config;
 
-import com.onelity.bookme.service.UserDetailsService;
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import com.onelity.bookme.service.UserDetailsService;
 
 /**
  * Configures the authentication aspect of the application
@@ -25,15 +26,14 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfiguration {
 
     /**
-     * Creates a security filter chain so that all requests require authentication and http basic authentication
-     * will be used
+     * Creates a security filter chain so that all requests require authentication and http basic authentication will be
+     * used
+     *
      * @return returns the created SecurityFilterChain
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.
-                csrf(AbstractHttpConfigurer::disable)
-                        .authorizeHttpRequests((auth -> auth.anyRequest().authenticated()))
+        http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests((auth -> auth.anyRequest().authenticated()))
                 .httpBasic(withDefaults());
         return http.build();
     }

@@ -1,19 +1,21 @@
 package com.onelity.bookme.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
+import java.sql.Date;
+import java.sql.Time;
+
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.sql.Date;
-import java.sql.Time;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.persistence.*;
 
 /**
  * Model class for booking entities, which corresponds with 'bookings' table in database
  */
 @Entity(name = "bookings")
-@Table(name="bookings", schema="public")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@Table(name = "bookings", schema = "public")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,9 +43,8 @@ public class Booking {
     public Booking() {
     }
 
-    public Booking(Long id, Room room, String title, String description, Date startDate,
-                   Date endDate, Time startTime, Time endTime, Integer participants,
-                   String repeat_pattern, String creator_username) {
+    public Booking(Long id, Room room, String title, String description, Date startDate, Date endDate, Time startTime,
+            Time endTime, Integer participants, String repeat_pattern, String creator_username) {
         this.id = id;
         this.room = room;
         this.title = title;
@@ -70,7 +71,7 @@ public class Booking {
     }
 
     public void setRoom(Room room) {
-            this.room = room;
+        this.room = room;
     }
 
     public String getTitle() {

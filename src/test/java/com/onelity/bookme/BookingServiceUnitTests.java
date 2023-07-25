@@ -1,11 +1,8 @@
 package com.onelity.bookme;
 
-import com.onelity.bookme.dto.BookingDTO;
-import com.onelity.bookme.dto.RoomDTO;
-import com.onelity.bookme.repository.BookingRepository;
-import com.onelity.bookme.repository.RoomRepository;
-import com.onelity.bookme.service.BookingService;
-import com.onelity.bookme.service.RoomService;
+import java.sql.Date;
+import java.sql.Time;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.internal.util.Assert;
@@ -16,8 +13,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.event.annotation.BeforeTestClass;
 
-import java.sql.Date;
-import java.sql.Time;
+import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.dto.RoomDTO;
+import com.onelity.bookme.repository.BookingRepository;
+import com.onelity.bookme.repository.RoomRepository;
+import com.onelity.bookme.service.BookingService;
+import com.onelity.bookme.service.RoomService;
 
 @SpringBootTest
 public class BookingServiceUnitTests {
@@ -47,7 +48,7 @@ public class BookingServiceUnitTests {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenValidBooking_whenCreateBooking_thenReturnOk() {
         BookingDTO bookingDTO = createExampleBookingDTO();
         createRoomInDatabase();
@@ -71,16 +72,16 @@ public class BookingServiceUnitTests {
         ResponseEntity<?> response = bookingService.createBookingInDatabase(bookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Meeting room with name '" + bookingDTO.getRoom() +
-                "' does not exist"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Meeting room with name '" + bookingDTO.getRoom() + "' does not exist"));
     }
 
     @Test
     public void givenBookingWithLongTitle_whenCreateBooking_thenReturnBadRequest() {
         BookingDTO bookingDTO = createExampleBookingDTO();
         createRoomInDatabase();
-        bookingDTO.setTitle("Title xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" +
-                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        bookingDTO.setTitle("Title xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                + "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         ResponseEntity<?> response = bookingService.createBookingInDatabase(bookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
@@ -130,7 +131,8 @@ public class BookingServiceUnitTests {
         ResponseEntity<?> response = bookingService.createBookingInDatabase(bookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Number of participants in booking exceeds meeting room capacity"));
+        Assert.isTrue(
+                errorResponse.getMessage().equals("Number of participants in booking exceeds meeting room capacity"));
     }
 
     @Test
@@ -141,7 +143,8 @@ public class BookingServiceUnitTests {
         ResponseEntity<?> response = bookingService.createBookingInDatabase(bookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Repeat option must either be null, 'every day', or 'every same day of the week'"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Repeat option must either be null, 'every day', or 'every same day of the week'"));
     }
 
     @Test
@@ -153,11 +156,12 @@ public class BookingServiceUnitTests {
         ResponseEntity<?> response = bookingService.createBookingInDatabase(bookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("If booking does not repeat, start date should be same as end date"));
+        Assert.isTrue(
+                errorResponse.getMessage().equals("If booking does not repeat, start date should be same as end date"));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingsWithNoTimeConflictRepeatsDaily_whenCreateBooking_thenReturnCreated() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createExampleBookingDTO();
@@ -170,7 +174,7 @@ public class BookingServiceUnitTests {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingsWithOverlappingTimesRepeatsDaily_whenCreateBooking_thenReturnConflict() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createExampleBookingDTO();
@@ -179,12 +183,12 @@ public class BookingServiceUnitTests {
         ResponseEntity<?> response = bookingService.createBookingInDatabase(newBookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.CONFLICT));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Meeting room with name " + newBookingDTO.getRoom() +
-                " is already booked for the same time"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Meeting room with name " + newBookingDTO.getRoom() + " is already booked for the same time"));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingWithOverlappingTimesRepeatsWeeklyConflictingDays_whenCreateBooking_thenReturnConflict() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createExampleBookingDTO();
@@ -194,12 +198,12 @@ public class BookingServiceUnitTests {
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.CONFLICT));
         System.out.println(response.getStatusCode());
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Meeting room with name " + newBookingDTO.getRoom() +
-                " is already booked for the same time"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Meeting room with name " + newBookingDTO.getRoom() + " is already booked for the same time"));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingWithOverlappingTimesRepeatsWeeklyNotConflicting_whenCreateBooking_thenReturnCreated() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createBookingDTORepeatsSaturdaysMarch();
@@ -212,7 +216,7 @@ public class BookingServiceUnitTests {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingsWithNonOverlappingTimesBothDaily_whenCreateBooking_thenReturnCreated() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createBookingDTORepeatsDailyInMarch();
@@ -225,7 +229,7 @@ public class BookingServiceUnitTests {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenBookingsWithOverlappingTimesNullRepeatPatterns_whenCreateBooking_thenReturnConflict() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createExampleBookingDTO();
@@ -234,12 +238,12 @@ public class BookingServiceUnitTests {
         ResponseEntity<?> response = bookingService.createBookingInDatabase(newBookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.CONFLICT));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Meeting room with name " + newBookingDTO.getRoom() +
-                " is already booked for the same time"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Meeting room with name " + newBookingDTO.getRoom() + " is already booked for the same time"));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenNewBookingOverlappingOnlyWithPreviousSelf_whenUpdateBooking_thenReturnOk() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createBookingDTORepeatsDailyInMarch();
@@ -257,7 +261,7 @@ public class BookingServiceUnitTests {
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenNewBookingOverlappingWithExistingBookings_whenUpdateBooking_thenReturnConflict() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createBookingDTORepeatsDailyInMarch();
@@ -273,12 +277,12 @@ public class BookingServiceUnitTests {
         response = bookingService.updateBookingInDatabase(id, newBookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.CONFLICT));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Meeting room with name " + bookingDTO.getRoom() +
-                " is already booked for the same time"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Meeting room with name " + bookingDTO.getRoom() + " is already booked for the same time"));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenNewBookingWithNonexistentRoom_whenUpdateBooking_thenReturnBadRequest() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createExampleBookingDTO();
@@ -289,12 +293,12 @@ public class BookingServiceUnitTests {
         response = bookingService.updateBookingInDatabase(id, bookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Meeting room with name '" + bookingDTO.getRoom() +
-                "' does not exist"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Meeting room with name '" + bookingDTO.getRoom() + "' does not exist"));
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenNewBookingWithParticipantsAboveRoomLimit_whenUpdateBooking_thenReturnBadRequest() {
         createRoomInDatabase();
         BookingDTO bookingDTO = createExampleBookingDTO();
@@ -305,8 +309,8 @@ public class BookingServiceUnitTests {
         response = bookingService.updateBookingInDatabase(id, bookingDTO);
         Assert.isTrue(response.getStatusCode().equals(HttpStatus.BAD_REQUEST));
         ErrorResponse errorResponse = (ErrorResponse) response.getBody();
-        Assert.isTrue(errorResponse.getMessage().equals("Number of participants in booking " +
-                "exceeds meeting room capacity"));
+        Assert.isTrue(errorResponse.getMessage()
+                .equals("Number of participants in booking " + "exceeds meeting room capacity"));
     }
 
     private BookingDTO createExampleBookingDTO() {

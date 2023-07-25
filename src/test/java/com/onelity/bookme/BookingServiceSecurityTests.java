@@ -1,12 +1,14 @@
 package com.onelity.bookme;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.onelity.bookme.dto.BookingDTO;
-import com.onelity.bookme.model.Booking;
-import com.onelity.bookme.model.Room;
-import com.onelity.bookme.repository.BookingRepository;
-import com.onelity.bookme.repository.RoomRepository;
-import com.onelity.bookme.repository.UserRepository;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.util.List;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,14 +24,13 @@ import org.springframework.test.context.event.annotation.BeforeTestClass;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import java.sql.Date;
-import java.sql.Time;
-import java.util.List;
-
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.model.Booking;
+import com.onelity.bookme.model.Room;
+import com.onelity.bookme.repository.BookingRepository;
+import com.onelity.bookme.repository.RoomRepository;
+import com.onelity.bookme.repository.UserRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -68,7 +69,7 @@ public class BookingServiceSecurityTests {
     }
 
     @Test
-    @WithMockUser(username = "employee", roles = {"EMPLOYEE"})
+    @WithMockUser(username = "employee", roles = { "EMPLOYEE" })
     public void givenBookingCreatorEmployee_whenUpdateBooking_thenReturnOk() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -77,17 +78,15 @@ public class BookingServiceSecurityTests {
 
         // when
         bookingDTO.setDescription("Updated description");
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", bookingId).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", bookingId)
+                .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(bookingDTO)));
 
         // then
-        response.andDo(print()).
-                andExpect(status().isOk());
+        response.andDo(print()).andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenAdmin_whenUpdateBooking_thenReturnOk() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -96,40 +95,34 @@ public class BookingServiceSecurityTests {
 
         // when
         bookingDTO.setDescription("Updated description");
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", bookingId).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", bookingId)
+                .contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(bookingDTO)));
 
         // then
-        response.andDo(print()).
-                andExpect(status().isOk());
+        response.andDo(print()).andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser(username = "employee", roles = {"EMPLOYEE"})
+    @WithMockUser(username = "employee", roles = { "EMPLOYEE" })
     public void givenNonBookingCreatorEmployee_whenUpdateBooking_thenReturnUnauthorized() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
-        mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)).
-                with(user("other employee").roles("EMPLOYEE")));
+        mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)).with(user("other employee").roles("EMPLOYEE")));
         List<Booking> bookings = bookingRepository.findAll();
         Long id = bookings.get(0).getId();
 
         // when
         bookingDTO.setDescription("Updated description");
-        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)));
+        ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)));
 
         // then
-        response.andDo(print()).
-                andExpect(status().isUnauthorized());
+        response.andDo(print()).andExpect(status().isUnauthorized());
     }
 
     @Test
-    @WithMockUser(username = "employee", roles = {"EMPLOYEE"})
+    @WithMockUser(username = "employee", roles = { "EMPLOYEE" })
     public void givenBookingCreatorEmployee_whenDeleteBooking_thenReturnNoContent() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -140,12 +133,11 @@ public class BookingServiceSecurityTests {
         ResultActions response = mockMvc.perform(delete("/bookings/{id}", bookingId));
 
         // then
-        response.andDo(print()).
-                andExpect(status().isNoContent());
+        response.andDo(print()).andExpect(status().isNoContent());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @WithMockUser(username = "admin", roles = { "ADMIN" })
     public void givenAdmin_whenDeleteBooking_thenReturnNoContent() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
@@ -156,19 +148,16 @@ public class BookingServiceSecurityTests {
         ResultActions response = mockMvc.perform(delete("/bookings/{id}", bookingId));
 
         // then
-        response.andDo(print()).
-                andExpect(status().isNoContent());
+        response.andDo(print()).andExpect(status().isNoContent());
     }
 
     @Test
-    @WithMockUser(username = "employee", roles = {"EMPLOYEE"})
+    @WithMockUser(username = "employee", roles = { "EMPLOYEE" })
     public void givenNonBookingCreatorEmployee_whenDeleteBooking_thenReturnUnauthorized() throws Exception {
         // given
         BookingDTO bookingDTO = createValidBookingDTO();
-        mockMvc.perform(post("/bookings").
-                contentType(MediaType.APPLICATION_JSON).
-                content(objectMapper.writeValueAsString(bookingDTO)).
-                with(user("other employee").roles("EMPLOYEE")));
+        mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingDTO)).with(user("other employee").roles("EMPLOYEE")));
         List<Booking> bookings = bookingRepository.findAll();
         Long id = bookings.get(0).getId();
 
@@ -176,8 +165,7 @@ public class BookingServiceSecurityTests {
         ResultActions response = mockMvc.perform(delete("/bookings/{id}", id));
 
         // then
-        response.andDo(print()).
-                andExpect(status().isUnauthorized());
+        response.andDo(print()).andExpect(status().isUnauthorized());
     }
 
     private void createMeetingRoomInDatabase() {

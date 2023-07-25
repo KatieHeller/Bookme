@@ -1,7 +1,7 @@
 package com.onelity.bookme.dto;
 
-import java.sql.Time;
 import java.sql.Date;
+import java.sql.Time;
 
 /**
  * DTO class for Booking entities
@@ -22,9 +22,8 @@ public class BookingDTO {
     public BookingDTO() {
     }
 
-    public BookingDTO(Long id, String room, String title, String description, Date startDate,
-                      Date endDate, Time startTime, Time endTime, Integer participants,
-                      String repeat_pattern) {
+    public BookingDTO(Long id, String room, String title, String description, Date startDate, Date endDate,
+            Time startTime, Time endTime, Integer participants, String repeat_pattern) {
         this.id = id;
         this.room = room;
         this.title = title;
@@ -41,7 +40,9 @@ public class BookingDTO {
         return id;
     }
 
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getRoom() {
         return room;
