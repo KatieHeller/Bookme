@@ -23,9 +23,9 @@ public class PersistenceConfiguration {
 
     @Bean
     public DataSource dataSource() {
-        DataSourceBuilder<?> builder = DataSourceBuilder.create();
-        builder.url("jdbc:postgresql://localhost:5432/Bookme-db?currentSchema=public&user=postgres&password=docker");
-        return builder.build();
+        return DataSourceBuilder.create()
+                .url("jdbc:postgresql://localhost:5432/Bookme-db?currentSchema=public&user=postgres&password=docker")
+                .build();
     }
 
     @Bean

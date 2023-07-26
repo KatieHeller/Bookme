@@ -15,6 +15,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.onelity.bookme.ErrorResponse;
 import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.exception.BookingNotFoundException;
+import com.onelity.bookme.exception.ConflictingBookingsException;
+import com.onelity.bookme.exception.InvalidBookingException;
+import com.onelity.bookme.exception.InvalidRoomException;
+import com.onelity.bookme.exception.UnauthorizedUserException;
 import com.onelity.bookme.model.Booking;
 import com.onelity.bookme.model.Room;
 import com.onelity.bookme.repository.BookingRepository;
@@ -40,13 +45,12 @@ public class BookingService {
      * @param id
      *            id of requested booking
      *
-     * @return returns BookingDTO with OK status if booking is present, or Error message with Not Found status if
-     *         booking is not present
+     * @return returns BookingDTO with OK status if booking is present, or throws BookingNotFoundException
      */
-    public ResponseEntity<?> getBookingFromDatabase(Long id) {
+    public ResponseEntity<BookingDTO> getBookingFromDatabase(Long id) throws Exception {
         Optional<Booking> booking = repo.findById(id);
         if (booking.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking with id " + id + " not found");
+            throw new BookingNotFoundException("Booking with id " + id + " not found");
         }
         return new ResponseEntity<>(convertBookingToBookingDTO(booking.get()), HttpStatus.OK);
     }
@@ -56,7 +60,7 @@ public class BookingService {
      *
      * @return returns list of booking DTOs with OK status
      */
-    public ResponseEntity<?> getAllBookingsFromDatabase() {
+    public ResponseEntity<List<BookingDTO>> getAllBookingsFromDatabase() {
         List<Booking> allBookings = repo.findAll();
         List<BookingDTO> allBookingsDTO = new ArrayList<>();
         for (Booking booking : allBookings) {
@@ -71,44 +75,30 @@ public class BookingService {
      * @param bookingDTO
      *            bookingDTO object that user would like to add to database
      *
-     * @return returns same bookingDTO object with its new id and Created status, or Conflict or Bad Request if booking
-     *         is not valid
+     * @return returns same bookingDTO object with its new id and Created status, or throws InvalidBookingException or
+     *         ConflictingBookingException
      */
-    public ResponseEntity<?> createBookingInDatabase(BookingDTO bookingDTO) {
-        ResponseEntity<?> isValidBooking = checkForValidBooking(bookingDTO);
-        if (isValidBooking != null) {
-            return isValidBooking;
-        }
-        ResponseEntity<?> hasConflictingBooking = checkForConflictingBookings(0L, bookingDTO, false);
-        if (hasConflictingBooking != null) {
-            return hasConflictingBooking;
-        }
+    public ResponseEntity<BookingDTO> createBookingInDatabase(BookingDTO bookingDTO) throws Exception {
+        checkForValidBooking(bookingDTO);
+        checkForConflictingBookings(0L, bookingDTO, false);
         Booking newBooking = repo.saveAndFlush(convertBookingDTOToBooking(bookingDTO));
         BookingDTO newBookingDTO = convertBookingToBookingDTO(newBooking);
         return new ResponseEntity<>(newBookingDTO, HttpStatus.CREATED);
     }
 
     /**
-     * Deletes a booking in database, checking that the booking actually exists and the current user is authorized to
-     * delete it
+     * Deletes a booking in database, or throws UnauthorizedUserException
      *
      * @param id
      *            id of booking that user wants to delete
-     *
-     * @return returns No content if successful deletion or if booking was already not present, or returns Unauthorized
-     *         if user was not authorized to delete this
      */
-    public ResponseEntity<?> deleteBookingInDatabase(Long id) {
+    public void deleteBookingInDatabase(Long id) throws Exception {
         Optional<Booking> optionalBooking = repo.findById(id);
         if (optionalBooking.isPresent()) {
             Booking booking = optionalBooking.get();
-            ResponseEntity<?> isAuthenticatedUser = checkIfAuthenticatedUser(booking);
-            if (isAuthenticatedUser != null) {
-                return isAuthenticatedUser;
-            }
+            checkIfAuthenticatedUser(booking);
             repo.deleteById(id);
         }
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -120,65 +110,27 @@ public class BookingService {
      * @param bookingDTO
      *            information that user wants to update the booking with
      *
-     * @return Returns new bookingDTO object and Ok status if successful update, Unauthorized if user not authorized,
-     *         Bad Request if booking is invalid, or Conflict if booking times overlap with another booking in same room
+     * @return Returns new bookingDTO object and Ok status if successful update, or throws UnauthorizedUserException or
+     *         InvalidBookingException or ConflictingBookingsException
      */
-    public ResponseEntity<?> updateBookingInDatabase(Long id, BookingDTO bookingDTO) {
+    public ResponseEntity<BookingDTO> updateBookingInDatabase(Long id, BookingDTO bookingDTO) throws Exception {
         Optional<Booking> optionalBooking = repo.findById(id);
         if (optionalBooking.isPresent()) {
             Booking booking = optionalBooking.get();
-            ResponseEntity<?> isAuthenticatedUser = checkIfAuthenticatedUser(booking);
-            if (isAuthenticatedUser != null) {
-                return isAuthenticatedUser;
-            }
+            checkIfAuthenticatedUser(booking);
         }
         // If existingBooking not found, exception is handled in BookingController
         Booking existingBooking = repo.getReferenceById(id);
-        ResponseEntity<?> isValidBooking = checkForValidBooking(bookingDTO);
-        if (isValidBooking != null) {
-            return isValidBooking;
-        }
+        checkForValidBooking(bookingDTO);
         // If any dates or times of booking have been changed, do check for conflicting bookings
         if (!existingBooking.getStartDate().toLocalDate().equals(bookingDTO.getStartDate().toLocalDate())
                 || !existingBooking.getEndDate().toLocalDate().equals(bookingDTO.getEndDate().toLocalDate())
                 || !existingBooking.getStartTime().equals(bookingDTO.getStartTime())
                 || !existingBooking.getEndTime().equals(bookingDTO.getEndTime())) {
-            ResponseEntity<?> hasConflictingBooking = checkForConflictingBookings(id, bookingDTO, true);
-            if (hasConflictingBooking != null) {
-                return hasConflictingBooking;
-            }
+            checkForConflictingBookings(id, bookingDTO, true);
         }
         BeanUtils.copyProperties(convertBookingDTOToBooking(bookingDTO), existingBooking, "id");
         return new ResponseEntity<>(convertBookingToBookingDTO(repo.saveAndFlush(existingBooking)), HttpStatus.OK);
-    }
-
-    /**
-     * Creates ResponseEntity for case when bookings conflict
-     *
-     * @param bookingDTO
-     *            booking which is already booked at time
-     *
-     * @return returns ResponseEntity object with Conflict status and error message containing booked room name
-     */
-    private ResponseEntity<?> meetingRoomBooked(BookingDTO bookingDTO) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(
-                "Meeting room with name " + bookingDTO.getRoom() + " is already booked " + "for the same time");
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
-
-    /**
-     * Creates ResponseEntity for any case where user input is invalid
-     *
-     * @param message
-     *            message that should be displayed to user
-     *
-     * @return returns ResponseEntity object with Bad Request status and error message
-     */
-    private ResponseEntity<?> badRequest(String message) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(message);
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     private BookingDTO convertBookingToBookingDTO(Booking booking) {
@@ -206,88 +158,79 @@ public class BookingService {
     }
 
     /**
-     * Checks if current autheticated user either has Admin role or is the creator of a booking
+     * Throws UnauthorizedUserException if current authenticated user is not authorized
      *
      * @param booking
      *            Booking a user is trying to update or delete
-     *
-     * @return returns null if user is authorized or a Response Entity with Unauthorized status otherwise
      */
-    private ResponseEntity<?> checkIfAuthenticatedUser(Booking booking) {
+    private void checkIfAuthenticatedUser(Booking booking) throws Exception {
         UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                || user.getUsername().equals(booking.getCreator_username())) {
-            return null;
+        if (!user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                && !user.getUsername().equals(booking.getCreator_username())) {
+            throw new UnauthorizedUserException("Access denied");
         }
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Access denied");
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
     /**
-     * Performs all validity checks on fields of a bookingDTO
+     * Throws InvalidBookingException if any part of bookingDTO is not valid
      *
      * @param bookingDTO
      *            bookingDTO object that needs to be verified
-     *
-     * @return returns null if booking is valid or ResponseEntity with Bad Request status and custom error message
-     *         informing user which field is invalid
      */
-    private ResponseEntity<?> checkForValidBooking(BookingDTO bookingDTO) {
+    private void checkForValidBooking(BookingDTO bookingDTO) throws Exception {
         if (bookingDTO == null) {
-            return badRequest("Booking cannot be null");
+            throw new InvalidBookingException("Booking cannot be null");
         }
         if (bookingDTO.getRoom() == null) {
-            return badRequest("Room can not be null");
+            throw new InvalidBookingException("Room can not be null");
         }
         Room room = roomRepo.findByName(bookingDTO.getRoom());
         // Checks that meeting room exists
         if (room == null) {
-            return badRequest("Meeting room with name '" + bookingDTO.getRoom() + "' does not exist");
+            throw new InvalidBookingException("Meeting room with name '" + bookingDTO.getRoom() + "' does not exist");
         }
         if (bookingDTO.getTitle() == null || bookingDTO.getStartDate() == null || bookingDTO.getEndDate() == null
                 || bookingDTO.getStartTime() == null || bookingDTO.getEndTime() == null
                 || bookingDTO.getParticipants() == null) {
-            return badRequest("Fields of booking cannot be null (except description or repeat option)");
+            throw new InvalidBookingException("Fields of booking cannot be null (except description or repeat option)");
         }
         // Checks that booking title is no more than 100 characters
         if (bookingDTO.getTitle().length() > 100) {
-            return badRequest("Booking title cannot be more than 100 characters");
+            throw new InvalidBookingException("Booking title cannot be more than 100 characters");
         }
         // Checks that booking start date is not after end date
         if (bookingDTO.getStartDate().after(bookingDTO.getEndDate())) {
-            return badRequest("Booking start date cannot be after booking end date");
+            throw new InvalidBookingException("Booking start date cannot be after booking end date");
         }
         // Checks that booking start time is before end time
         if (bookingDTO.getStartTime().after(bookingDTO.getEndTime())) {
-            return badRequest("Booking start time must be before booking end time");
+            throw new InvalidBookingException("Booking start time must be before booking end time");
         }
         if (bookingDTO.getParticipants() < 0) {
-            return badRequest("Participants cannot be less than 0");
+            throw new InvalidBookingException("Participants cannot be less than 0");
         }
         // Checks that participants size does not exceed meeting room capacity
         if (bookingDTO.getParticipants() > room.getCapacity()) {
-            return badRequest("Number of participants in booking exceeds meeting room capacity");
+            throw new InvalidBookingException("Number of participants in booking exceeds meeting room capacity");
         }
         // Checks that repeat option is either null, 'every day', or 'every same day of the week'
         String repeatPattern = bookingDTO.getRepeat_pattern();
         if (repeatPattern != null && !repeatPattern.equals("every day")
                 && !repeatPattern.equals("every same day of the week")) {
-            return badRequest("Repeat option must either be null, 'every day', or 'every same day of the week'");
+            throw new InvalidBookingException(
+                    "Repeat option must either be null, 'every day', or 'every same day of the week'");
         }
         // Checks that if repeat option is null, start date is same as end date
         if (repeatPattern == null
                 && !bookingDTO.getStartDate().toLocalDate().isEqual(bookingDTO.getEndDate().toLocalDate())) {
-            return badRequest("If booking does not repeat, start date should be same as end date");
+            throw new InvalidBookingException("If booking does not repeat, start date should be same as end date");
         }
-        // Returns null only if this booking is valid
-        return null;
     }
 
     // When isUpdate is true, the id will be used so that if the new booking times overlap with itself, won't be counted
 
     /**
-     * Verifies if a given booking will overlap times and room with any existing bookings in database
+     * Throws ConflictingBookingsException if booking will overlap times and room with any existing bookings in database
      *
      * @param id
      *            used in case of PUT method for bookings, the id of booking being updated
@@ -296,10 +239,8 @@ public class BookingService {
      * @param isUpdate
      *            when true, the id will be used so that if a booking's new times overlap with its previous times, this
      *            conflict will be ignored
-     *
-     * @return returns null if there are no conflicts or a ResponseEntity with Conflict status and error message
      */
-    private ResponseEntity<?> checkForConflictingBookings(Long id, BookingDTO bookingDTO, boolean isUpdate) {
+    private void checkForConflictingBookings(Long id, BookingDTO bookingDTO, boolean isUpdate) throws Exception {
         Room room = roomRepo.findByName(bookingDTO.getRoom());
         String repeatPattern = bookingDTO.getRepeat_pattern();
         // Gets all bookings with same room with overlapping dates and times
@@ -320,26 +261,28 @@ public class BookingService {
             String otherRepeatPattern = booking.getRepeat_pattern();
             // If either repeat pattern is 'every day', there will be conflict
             if (repeatPattern != null && repeatPattern.equals("every day")) {
-                return meetingRoomBooked(bookingDTO);
+                throw new ConflictingBookingsException(
+                        "Meeting room with name " + bookingDTO.getRoom() + " is already booked " + "for the same time");
             }
             if (otherRepeatPattern != null && otherRepeatPattern.equals("every day")) {
-                return meetingRoomBooked(bookingDTO);
+                throw new ConflictingBookingsException(
+                        "Meeting room with name " + bookingDTO.getRoom() + " is already booked " + "for the same time");
             }
             // If either repeat pattern is 'every same day of the week', conflict if start dates are same day of week
             c.setTime(booking.getStartDate());
             int otherDayOfWeek = c.get(Calendar.DAY_OF_WEEK);
             if (otherRepeatPattern != null || repeatPattern != null) {
                 if (dayOfWeek == otherDayOfWeek) {
-                    return meetingRoomBooked(bookingDTO);
+                    throw new ConflictingBookingsException("Meeting room with name " + bookingDTO.getRoom()
+                            + " is already booked " + "for the same time");
                 }
             }
             // This else only occurs when both repeat patterns are null, meaning there must be overlap
             else {
-                return meetingRoomBooked(bookingDTO);
+                throw new ConflictingBookingsException(
+                        "Meeting room with name " + bookingDTO.getRoom() + " is already booked " + "for the same time");
             }
         }
-        // Returns null if there are no conflicting bookings
-        return null;
     }
 
 }
