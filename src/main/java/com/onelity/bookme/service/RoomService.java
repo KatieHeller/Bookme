@@ -10,12 +10,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.onelity.bookme.ErrorResponse;
 import com.onelity.bookme.dto.RoomDTO;
-import com.onelity.bookme.exception.InvalidRoomException;
-import com.onelity.bookme.exception.RoomNotFoundException;
 import com.onelity.bookme.model.Booking;
 import com.onelity.bookme.model.Room;
 import com.onelity.bookme.repository.RoomRepository;
@@ -40,12 +37,13 @@ public class RoomService {
      * @param id
      *            id of requested room
      *
-     * @return returns RoomDTO with OK status if room is present, or throws RoomNotFoundException
+     * @return returns RoomDTO with OK status if room is present, or Error message with Not Found status if room is not
+     *         present
      */
-    public ResponseEntity<RoomDTO> getRoomFromDatabase(Long id) throws Exception {
+    public ResponseEntity<?> getRoomFromDatabase(Long id) {
         Optional<Room> room = repo.findById(id);
         if (room.isEmpty()) {
-            throw new RoomNotFoundException("Room with id " + id + " not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Room with id " + id + " not found");
         }
         return new ResponseEntity<>(modelMapper.map(room, RoomDTO.class), HttpStatus.OK);
     }
@@ -55,7 +53,7 @@ public class RoomService {
      *
      * @return returns list of room DTOs with OK status
      */
-    public ResponseEntity<List<RoomDTO>> getAllRoomsFromDatabase() {
+    public ResponseEntity<?> getAllRoomsFromDatabase() {
         List<Room> allRooms = repo.findAll();
         List<RoomDTO> allRoomsDTO = new ArrayList<RoomDTO>();
         for (Room room : allRooms) {
@@ -70,10 +68,13 @@ public class RoomService {
      * @param roomDTO
      *            roomDTO object that user would like to add to database
      *
-     * @return returns same roomDTO object with its new id and Created status, or throws InvalidRoomException
+     * @return returns same roomDTO object with its new id and Created status, or Bad Request if room is not valid
      */
-    public ResponseEntity<RoomDTO> createRoomInDatabase(RoomDTO roomDTO) throws Exception {
-        checkForValidRoom(roomDTO);
+    public ResponseEntity<?> createRoomInDatabase(RoomDTO roomDTO) {
+        ResponseEntity<?> isValidRoom = checkForValidRoom(roomDTO);
+        if (isValidRoom != null) {
+            return isValidRoom;
+        }
         Room newRoom = repo.saveAndFlush(modelMapper.map(roomDTO, Room.class));
         return new ResponseEntity<>(modelMapper.map(newRoom, RoomDTO.class), HttpStatus.CREATED);
     }
@@ -83,9 +84,12 @@ public class RoomService {
      *
      * @param id
      *            id of room user wants to delete
+     *
+     * @return returns ResponseEntity with No Content status
      */
-    public void deleteRoomInDatabase(Long id) {
+    public ResponseEntity<?> deleteRoomInDatabase(Long id) {
         repo.deleteById(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     /**
@@ -96,17 +100,21 @@ public class RoomService {
      * @param roomDTO
      *            roomDTO object with new room info
      *
-     * @return returns updated roomDTO object with OK status if successful, or throws InvalidRoomException
+     * @return returns updated roomDTO object with OK status if successful, or returns Bad Request status with error
+     *         message if updated room would be invalid
      */
-    public ResponseEntity<RoomDTO> updateRoomInDatabase(Long id, RoomDTO roomDTO) throws Exception {
+    public ResponseEntity<?> updateRoomInDatabase(Long id, RoomDTO roomDTO) {
         Room existingRoom = repo.getReferenceById(id);
-        checkForValidRoom(roomDTO);
+        ResponseEntity<?> isValidRoom = checkForValidRoom(roomDTO);
+        if (isValidRoom != null) {
+            return isValidRoom;
+        }
         Set<Booking> existingBookings = existingRoom.getBookings();
         for (Booking booking : existingBookings) {
             if (booking.getParticipants() > roomDTO.getCapacity()) {
-                throw new InvalidRoomException("Room could not be updated because booking with title '"
-                        + booking.getTitle() + "' has more participants (" + booking.getParticipants().toString()
-                        + ") than new capacity (" + roomDTO.getCapacity().toString() + ")");
+                return badRequest("Room could not be updated because booking with title '" + booking.getTitle()
+                        + "' has more participants (" + booking.getParticipants().toString() + ") than new capacity ("
+                        + roomDTO.getCapacity().toString() + ")");
             }
         }
         BeanUtils.copyProperties(modelMapper.map(roomDTO, Room.class), existingRoom, "id");
@@ -114,28 +122,47 @@ public class RoomService {
     }
 
     /**
-     * Throws InvalidRoomException if any fields of roomDTO are not valid, otherwise does nothing
+     * Performs validity checks on fields of a roomDTO
      *
      * @param roomDTO
      *            roomDTO object being checked
+     *
+     * @return returns null if room is valid, or returns Bad Request status with custom error message describing what
+     *         field is invalid
      */
-    private void checkForValidRoom(RoomDTO roomDTO) throws Exception {
+    private ResponseEntity<?> checkForValidRoom(RoomDTO roomDTO) {
         if (roomDTO == null) {
-            throw new InvalidRoomException("Room can not be null");
+            return badRequest("Room can not be null");
         }
         if (roomDTO.getName() == null || roomDTO.getLocation() == null || roomDTO.getCapacity() == null) {
-            throw new InvalidRoomException("Room fields can not be null");
+            return badRequest("Room fields can not be null");
         }
         if (roomDTO.getName().length() > 100) {
-            throw new InvalidRoomException("Name cannot be more than 100 characters");
+            return badRequest("Name cannot be more than 100 characters");
         }
         String location = roomDTO.getLocation();
         if (!location.equals("Thessaloniki") && !location.equals("Cologne")) {
-            throw new InvalidRoomException("Location must be either 'Thessaloniki' or 'Cologne'");
+            return badRequest("Location must be either 'Thessaloniki' or 'Cologne'");
         }
         if (roomDTO.getCapacity() < 0) {
-            throw new InvalidRoomException("Capacity cannot be less than 0");
+            return badRequest("Capacity cannot be less than 0");
         }
+        // return null only if room is valid
+        return null;
+    }
+
+    /**
+     * Handles creating Bad Request responses for given messages
+     *
+     * @param message
+     *            String of why request is bad
+     *
+     * @return returns ResponseEntity object with custom message and Bad Request status
+     */
+    private ResponseEntity<?> badRequest(String message) {
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage(message);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
 }

@@ -2,7 +2,6 @@ package com.onelity.bookme.dto;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.onelity.bookme.model.Location;
 import com.onelity.bookme.service.RoomService;
 
 /**
