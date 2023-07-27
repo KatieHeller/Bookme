@@ -1,5 +1,7 @@
 package com.onelity.bookme.controller;
 
+import java.util.List;
+
 import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,7 +10,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
+import com.onelity.bookme.ErrorResponse;
 import com.onelity.bookme.dto.RoomDTO;
+import com.onelity.bookme.exception.InvalidRoomException;
+import com.onelity.bookme.exception.RoomNotFoundException;
 import com.onelity.bookme.service.RoomService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -26,46 +31,53 @@ public class RoomController {
 
     @GetMapping
     @RequestMapping("{id}")
-    public ResponseEntity<?> getRoom(@PathVariable Long id) {
+    public ResponseEntity<RoomDTO> getRoom(@PathVariable Long id) throws Exception {
         return roomService.getRoomFromDatabase(id);
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllRooms() {
+    public ResponseEntity<List<RoomDTO>> getAllRooms() {
         return roomService.getAllRoomsFromDatabase();
     }
 
     @PostMapping
     @ResponseBody
     @Secured("ROLE_ADMIN")
-    public ResponseEntity<?> createRoom(@RequestBody RoomDTO roomDTO) {
+    public ResponseEntity<RoomDTO> createRoom(@RequestBody RoomDTO roomDTO) throws Exception {
         return roomService.createRoomInDatabase(roomDTO);
     }
 
     @RequestMapping(value = "{id}", method = RequestMethod.DELETE)
     @Secured("ROLE_ADMIN")
-    public ResponseEntity<?> deleteRoom(@PathVariable Long id) {
-        return roomService.deleteRoomInDatabase(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteRoom(@PathVariable Long id) {
+        roomService.deleteRoomInDatabase(id);
     }
 
     @RequestMapping(value = "{id}", method = RequestMethod.PUT)
     @Secured("ROLE_ADMIN")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody RoomDTO roomDTO) {
+    public ResponseEntity<RoomDTO> update(@PathVariable Long id, @RequestBody RoomDTO roomDTO) throws Exception {
         return roomService.updateRoomInDatabase(id, roomDTO);
     }
 
     /**
-     * Handles EntityNotFound exceptions when rooms with nonexistent ids are searched for
+     * Handles RoomNotFound exceptions when rooms with nonexistent ids are searched for
      *
      * @param exception
      *            the exception thrown when the repository attempts to get a nonpresent room entity
      *
      * @return response entity with NotFound status and exception message
      */
-    @ExceptionHandler(EntityNotFoundException.class)
+    @ExceptionHandler(RoomNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ResponseEntity<String> handleNoSuchElementFoundException(EntityNotFoundException exception) {
+    public ResponseEntity<String> handleNoSuchElementFoundException(RoomNotFoundException exception) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidRoomException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<String> handleInvalidRoomException(InvalidRoomException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exception.getMessage());
     }
 
     /**

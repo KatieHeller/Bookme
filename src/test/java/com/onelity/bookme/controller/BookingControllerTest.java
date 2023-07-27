@@ -13,6 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.modelmapper.internal.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,13 +25,14 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.event.annotation.BeforeTestClass;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.ContentResultMatchers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onelity.bookme.dto.BookingDTO;
 import com.onelity.bookme.model.Booking;
+import com.onelity.bookme.model.Location;
 import com.onelity.bookme.model.Room;
-import com.onelity.bookme.model.User;
 import com.onelity.bookme.repository.BookingRepository;
 import com.onelity.bookme.repository.RoomRepository;
 
@@ -117,7 +119,7 @@ public class BookingControllerTest {
                 .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
         response.andDo(print()).andExpect(status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.message", is("Participants cannot be less than 0")));
+                .andExpect(MockMvcResultMatchers.content().string("Participants cannot be less than 0"));
     }
 
     @Test
@@ -149,8 +151,10 @@ public class BookingControllerTest {
         ResultActions response = mockMvc.perform(post("/bookings").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingDTO2)));
         // then
-        response.andDo(print()).andExpect(status().isConflict()).andExpect(MockMvcResultMatchers.jsonPath("$.message",
-                is("Meeting room with name " + bookingDTO1.getRoom() + " is already booked " + "for the same time")));
+        String expectedString = "Meeting room with name " + bookingDTO1.getRoom() + " is already booked "
+                + "for the same time";
+        response.andDo(print()).andExpect(status().isConflict())
+                .andExpect(MockMvcResultMatchers.content().string(expectedString));
     }
 
     @Test
@@ -203,7 +207,9 @@ public class BookingControllerTest {
         // when
         ResultActions response = mockMvc.perform(get("/bookings/{id}", 5L));
         // then
-        response.andDo(print()).andExpect(status().isNotFound());
+        String expectedString = "Booking with id " + 5L + " not found";
+        response.andDo(print()).andExpect(status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().string(expectedString));
     }
 
     @Test
@@ -308,8 +314,10 @@ public class BookingControllerTest {
         ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingDTO2)));
         // then
-        response.andDo(print()).andExpect(status().isConflict()).andExpect(MockMvcResultMatchers.jsonPath("$.message",
-                is("Meeting room with name " + bookingDTO1.getRoom() + " is already booked " + "for the same time")));
+        String expectedString = "Meeting room with name " + bookingDTO1.getRoom() + " is already booked "
+                + "for the same time";
+        response.andDo(print()).andExpect(status().isConflict())
+                .andExpect(MockMvcResultMatchers.content().string(expectedString));
     }
 
     @Test
@@ -346,8 +354,8 @@ public class BookingControllerTest {
         ResultActions response = mockMvc.perform(put("/bookings/{id}", id).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(bookingDTO)));
         // then
-        response.andDo(print()).andExpect(status().isBadRequest()).andExpect(MockMvcResultMatchers.jsonPath("$.message",
-                is("Number of participants in booking exceeds meeting room capacity")));
+        response.andDo(print()).andExpect(status().isBadRequest()).andExpect(MockMvcResultMatchers.content()
+                .string("Number of participants in booking exceeds meeting room capacity"));
     }
 
     @Test

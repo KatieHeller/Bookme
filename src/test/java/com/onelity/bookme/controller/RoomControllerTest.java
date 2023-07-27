@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.ResultActions;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onelity.bookme.dto.RoomDTO;
+import com.onelity.bookme.model.Location;
 import com.onelity.bookme.model.Room;
 import com.onelity.bookme.repository.RoomRepository;
 
