@@ -1,24 +1,20 @@
 package com.onelity.bookme.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-import com.onelity.bookme.ErrorResponse;
 import com.onelity.bookme.dto.RoomDTO;
 import com.onelity.bookme.exception.InvalidRoomException;
 import com.onelity.bookme.exception.RoomNotFoundException;
 import com.onelity.bookme.model.Booking;
 import com.onelity.bookme.model.Room;
 import com.onelity.bookme.repository.RoomRepository;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 /**
  * RoomService handles all business logic required for interacting with meeting rooms

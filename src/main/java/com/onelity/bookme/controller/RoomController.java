@@ -1,7 +1,10 @@
 package com.onelity.bookme.controller;
 
+import com.onelity.bookme.dto.RoomDTO;
+import com.onelity.bookme.exception.InvalidRoomException;
+import com.onelity.bookme.exception.RoomNotFoundException;
+import com.onelity.bookme.service.RoomService;
 import java.util.List;
-
 import org.postgresql.util.PSQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,14 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
-
-import com.onelity.bookme.ErrorResponse;
-import com.onelity.bookme.dto.RoomDTO;
-import com.onelity.bookme.exception.InvalidRoomException;
-import com.onelity.bookme.exception.RoomNotFoundException;
-import com.onelity.bookme.service.RoomService;
-
-import jakarta.persistence.EntityNotFoundException;
 
 /**
  * Controller for /meeting-rooms endpoint which directs all requests to methods implemented in roomService module. The
