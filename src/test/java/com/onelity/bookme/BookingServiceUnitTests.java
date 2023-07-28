@@ -1,3 +1,4 @@
+
 package com.onelity.bookme;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -380,5 +381,6 @@ public class BookingServiceUnitTests {
         roomDTO.setLocation("Thessaloniki");
         roomDTO.setCapacity(100);
         roomService.createRoomInDatabase(roomDTO);
+
     }
 }

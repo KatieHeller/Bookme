@@ -1,14 +1,23 @@
 package com.onelity.bookme;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.model.Booking;
+import com.onelity.bookme.model.CustomUserDetails;
+import com.onelity.bookme.model.Room;
+import com.onelity.bookme.repository.BookingRepository;
+import com.onelity.bookme.repository.RoomRepository;
+import com.onelity.bookme.repository.UserRepository;
+import com.onelity.bookme.service.CustomUserDetailsService;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.List;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,29 +25,29 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.event.annotation.BeforeTestClass;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.onelity.bookme.dto.BookingDTO;
-import com.onelity.bookme.model.Booking;
-import com.onelity.bookme.model.Location;
-import com.onelity.bookme.model.Room;
-import com.onelity.bookme.repository.BookingRepository;
-import com.onelity.bookme.repository.RoomRepository;
-import com.onelity.bookme.repository.UserRepository;
-
-@SpringBootTest
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class BookingServiceSecurityTests {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    private WebApplicationContext context;
 
     @Autowired
     private UserRepository userRepository;
@@ -55,11 +64,22 @@ public class BookingServiceSecurityTests {
     @Autowired
     private ModelMapper modelMapper;
 
+    @BeforeTestClass
+    public void setup() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+    }
+
     @BeforeEach
-    void setup() {
+    void testSetup() {
         roomRepository.deleteAll();
         bookingRepository.deleteAll();
         userRepository.deleteAll();
+        userRepository.saveAndFlush(new com.onelity.bookme.model.User("admin",
+                "$2a$10$GF7/ts4aaLJ74dOB/d.tQeCGRf6UEZ8e8.J3ELauuQ1znB0WIH/lO", "ROLE_ADMIN"));
+        userRepository.saveAndFlush(new com.onelity.bookme.model.User("employee",
+                "$2a$10$GF7/ts4aaLJ74dOB/d.tQeCGRf6UEZ8e8.J3ELauuQ1znB0WIH/lO", "ROLE_EMPLOYEE"));
+        userRepository.saveAndFlush(new com.onelity.bookme.model.User("other employee",
+                "$2a$10$GF7/ts4aaLJ74dOB/d.tQeCGRf6UEZ8e8.J3ELauuQ1znB0WIH/lO", "ROLE_EMPLOYEE"));
         createMeetingRoomInDatabase();
     }
 
@@ -193,10 +213,11 @@ public class BookingServiceSecurityTests {
 
     private Booking convertBookingDTOToBooking(BookingDTO bookingDTO) {
         Room room = roomRepository.findByName(bookingDTO.getRoom());
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String username = user.getUsername();
+        User creator = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        CustomUserDetails customUserDetails = (CustomUserDetails) customUserDetailsService
+                .loadUserByUsername(creator.getUsername());
         return new Booking(bookingDTO.getId(), room, bookingDTO.getTitle(), bookingDTO.getDescription(),
                 bookingDTO.getStartDate(), bookingDTO.getEndDate(), bookingDTO.getStartTime(), bookingDTO.getEndTime(),
-                bookingDTO.getParticipants(), bookingDTO.getRepeat_pattern(), username);
+                bookingDTO.getParticipants(), bookingDTO.getRepeat_pattern(), customUserDetails.getUser());
     }
 }

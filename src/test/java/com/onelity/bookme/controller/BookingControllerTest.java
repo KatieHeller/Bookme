@@ -6,35 +6,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.onelity.bookme.dto.BookingDTO;
+import com.onelity.bookme.model.Booking;
+import com.onelity.bookme.model.CustomUserDetails;
+import com.onelity.bookme.model.Room;
+import com.onelity.bookme.repository.BookingRepository;
+import com.onelity.bookme.repository.RoomRepository;
+import com.onelity.bookme.service.CustomUserDetailsService;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.List;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.modelmapper.internal.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.result.ContentResultMatchers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.onelity.bookme.dto.BookingDTO;
-import com.onelity.bookme.model.Booking;
-import com.onelity.bookme.model.Location;
-import com.onelity.bookme.model.Room;
-import com.onelity.bookme.repository.BookingRepository;
-import com.onelity.bookme.repository.RoomRepository;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -42,6 +38,9 @@ public class BookingControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -414,10 +413,12 @@ public class BookingControllerTest {
 
     private Booking convertBookingDTOToBooking(BookingDTO bookingDTO) {
         Room room = roomRepository.findByName(bookingDTO.getRoom());
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String booking_creator = user.getUsername();
+        org.springframework.security.core.userdetails.User creator = (User) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        CustomUserDetails customUserDetails = (CustomUserDetails) customUserDetailsService
+                .loadUserByUsername(creator.getUsername());
         return new Booking(bookingDTO.getId(), room, bookingDTO.getTitle(), bookingDTO.getDescription(),
                 bookingDTO.getStartDate(), bookingDTO.getEndDate(), bookingDTO.getStartTime(), bookingDTO.getEndTime(),
-                bookingDTO.getParticipants(), bookingDTO.getRepeat_pattern(), booking_creator);
+                bookingDTO.getParticipants(), bookingDTO.getRepeat_pattern(), customUserDetails.getUser());
     }
 }

@@ -1,14 +1,11 @@
 package com.onelity.bookme.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
 import java.sql.Date;
 import java.sql.Time;
-
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-import jakarta.persistence.*;
 
 /**
  * Model class for booking entities, which corresponds with 'bookings' table in database
@@ -38,13 +35,16 @@ public class Booking {
     private Time endTime;
     private Integer participants;
     private String repeat_pattern;
-    private String creator_username;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "creator", nullable = false, unique = true)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private User creator;
 
     public Booking() {
     }
 
     public Booking(Long id, Room room, String title, String description, Date startDate, Date endDate, Time startTime,
-            Time endTime, Integer participants, String repeat_pattern, String creator_username) {
+            Time endTime, Integer participants, String repeat_pattern, User user) {
         this.id = id;
         this.room = room;
         this.title = title;
@@ -55,7 +55,7 @@ public class Booking {
         this.endTime = endTime;
         this.participants = participants;
         this.repeat_pattern = repeat_pattern;
-        this.creator_username = creator_username;
+        this.creator = user;
     }
 
     public Long getId() {
@@ -138,11 +138,11 @@ public class Booking {
         this.repeat_pattern = repeat_pattern;
     }
 
-    public String getCreator_username() {
-        return creator_username;
+    public User getCreator() {
+        return creator;
     }
 
-    public void setCreator_username(String creator_username) {
-        this.creator_username = creator_username;
+    public void setCreator(User creator) {
+        this.creator = creator;
     }
 }

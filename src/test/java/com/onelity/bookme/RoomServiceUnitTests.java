@@ -2,20 +2,6 @@ package com.onelity.bookme;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.sql.Date;
-import java.sql.Time;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.modelmapper.internal.util.Assert;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.event.annotation.BeforeTestClass;
 
 import com.onelity.bookme.dto.BookingDTO;
 import com.onelity.bookme.dto.RoomDTO;
@@ -24,6 +10,15 @@ import com.onelity.bookme.repository.BookingRepository;
 import com.onelity.bookme.repository.RoomRepository;
 import com.onelity.bookme.service.BookingService;
 import com.onelity.bookme.service.RoomService;
+import java.sql.Date;
+import java.sql.Time;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.event.annotation.BeforeTestClass;
 
 @SpringBootTest
 public class RoomServiceUnitTests {

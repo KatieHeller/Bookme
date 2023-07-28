@@ -1,16 +1,14 @@
 package com.onelity.bookme.config;
 
+import com.onelity.bookme.service.BookingService;
+import com.onelity.bookme.service.RoomService;
 import javax.sql.DataSource;
-
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import com.onelity.bookme.service.BookingService;
-import com.onelity.bookme.service.RoomService;
 
 /**
  * Configures the Postgres database and various services

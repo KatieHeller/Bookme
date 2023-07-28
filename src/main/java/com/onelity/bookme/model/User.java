@@ -1,15 +1,8 @@
 package com.onelity.bookme.model;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.*;
+import java.util.Set;
 
 /**
  * Model class corresponding to 'users' entity, which stores all info of authenticated app users
@@ -17,19 +10,20 @@ import jakarta.persistence.*;
 @Entity(name = "users")
 @Table(name = "users", schema = "public")
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
-public class User implements UserDetails {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(unique = true)
     private String username;
-
     private String password;
     private String role;
 
-    public User() {
+    @OneToMany(mappedBy = "creator", fetch = FetchType.LAZY)
+    private Set<Booking> bookings;
 
+    public User() {
     }
 
     public User(String username, String password, String role) {
@@ -46,7 +40,6 @@ public class User implements UserDetails {
         this.id = id;
     }
 
-    @Override
     public String getUsername() {
         return username;
     }
@@ -55,7 +48,6 @@ public class User implements UserDetails {
         this.username = username;
     }
 
-    @Override
     public String getPassword() {
         return password;
     }
@@ -72,38 +64,11 @@ public class User implements UserDetails {
         this.role = role;
     }
 
-    /**
-     * Returns proper authorities of a user based on their role in database
-     *
-     * @return returns set of granted authorities
-     */
-    @Override
-    public Set<GrantedAuthority> getAuthorities() {
-        Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
-        if (this.role.equals("ROLE_ADMIN")) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-        }
-        return authorities;
+    public Set<Booking> getBookings() {
+        return bookings;
     }
 
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
+    public void setBookings(Set<Booking> bookings) {
+        this.bookings = bookings;
     }
 }

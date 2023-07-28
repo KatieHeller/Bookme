@@ -11,16 +11,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.User;
 
-import com.onelity.bookme.ErrorResponse;
+
 import com.onelity.bookme.dto.BookingDTO;
 import com.onelity.bookme.exception.BookingNotFoundException;
 import com.onelity.bookme.exception.ConflictingBookingsException;
 import com.onelity.bookme.exception.InvalidBookingException;
-import com.onelity.bookme.exception.InvalidRoomException;
 import com.onelity.bookme.exception.UnauthorizedUserException;
 import com.onelity.bookme.model.Booking;
+import com.onelity.bookme.model.CustomUserDetails;
 import com.onelity.bookme.model.Room;
 import com.onelity.bookme.repository.BookingRepository;
 import com.onelity.bookme.repository.RoomRepository;
@@ -34,7 +34,10 @@ public class BookingService {
     private BookingRepository repo;
 
     @Autowired
-    RoomRepository roomRepo;
+    private RoomRepository roomRepo;
+
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
 
     public BookingService() {
     }
@@ -150,11 +153,13 @@ public class BookingService {
      */
     private Booking convertBookingDTOToBooking(BookingDTO bookingDTO) {
         Room room = roomRepo.findByName(bookingDTO.getRoom());
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String booking_creator = user.getUsername();
+        org.springframework.security.core.userdetails.User creator = (User) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        CustomUserDetails customUserDetails = (CustomUserDetails) customUserDetailsService
+                .loadUserByUsername(creator.getUsername());
         return new Booking(bookingDTO.getId(), room, bookingDTO.getTitle(), bookingDTO.getDescription(),
                 bookingDTO.getStartDate(), bookingDTO.getEndDate(), bookingDTO.getStartTime(), bookingDTO.getEndTime(),
-                bookingDTO.getParticipants(), bookingDTO.getRepeat_pattern(), booking_creator);
+                bookingDTO.getParticipants(), bookingDTO.getRepeat_pattern(), customUserDetails.getUser());
     }
 
     /**
@@ -164,9 +169,14 @@ public class BookingService {
      *            Booking a user is trying to update or delete
      */
     private void checkIfAuthenticatedUser(Booking booking) throws Exception {
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!user.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                && !user.getUsername().equals(booking.getCreator_username())) {
+        org.springframework.security.core.userdetails.User creator = (User) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+        CustomUserDetails customUserDetails = (CustomUserDetails) customUserDetailsService
+                .loadUserByUsername(creator.getUsername());
+        System.out.println(customUserDetails.getUser().getUsername());
+        System.out.println(booking.getCreator().getUsername());
+        if (!customUserDetails.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))
+                && !customUserDetails.getUser().getUsername().equals(booking.getCreator().getUsername())) {
             throw new UnauthorizedUserException("Access denied");
         }
     }

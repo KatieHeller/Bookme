@@ -1,23 +1,16 @@
 package com.onelity.bookme.controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.AuthorizationServiceException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.*;
-
 import com.onelity.bookme.dto.BookingDTO;
 import com.onelity.bookme.exception.BookingNotFoundException;
 import com.onelity.bookme.exception.ConflictingBookingsException;
 import com.onelity.bookme.exception.InvalidBookingException;
 import com.onelity.bookme.exception.UnauthorizedUserException;
 import com.onelity.bookme.service.BookingService;
-
-import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * Controller for /bookings endpoint which directs all requests to methods implemented in bookingService module
